@@ -1,0 +1,550 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap');
+
+@import "tailwindcss";
+@theme {
+  --font-clash: "Clash Display", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-cove-black: #0a0a0a;
+  --color-cove-charcoal: #141414;
+  --color-cove-red: #ff3b30;
+  --color-cove-gray: #8a8a8a;
+
+  --color-background: hsl(0 0% 4%);
+  --color-foreground: hsl(0 0% 100%);
+  --color-card: hsl(0 0% 8%);
+  --color-card-foreground: hsl(0 0% 100%);
+  --color-popover: hsl(0 0% 8%);
+  --color-popover-foreground: hsl(0 0% 100%);
+  --color-primary: hsl(0 100% 59%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(0 0% 8%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(0 0% 15%);
+  --color-muted-foreground: hsl(0 0% 54%);
+  --color-accent: hsl(0 100% 59%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(0 0% 15%);
+  --color-input: hsl(0 0% 15%);
+  --color-ring: hsl(0 100% 59%);
+  --radius: 0rem;
+
+  --keyframes-accordion-down: {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  };
+  --keyframes-accordion-up: {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  };
+  --keyframes-caret-blink: {
+    0%, 70%, 100% { opacity: 1; }
+    20%, 50% { opacity: 0; }
+  };
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-caret-blink: caret-blink 1.25s ease-out infinite;
+}
+
+@layer base {
+  :root {
+    --color-bg-primary: #0a0a0a;
+    --color-bg-secondary: #141414;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #8a8a8a;
+    --color-accent-red: #ff3b30;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    background-color: #0a0a0a;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: #ff3b30;
+    color: #ffffff;
+  }
+}
+
+/* Splitting.js character styles */
+.splitting .char {
+  display: inline-block;
+}
+
+.splitting .word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Hero tectonic text */
+.hero-text-block {
+  font-family: 'Clash Display', sans-serif;
+  font-weight: 700;
+  /*
+   * min(8vw, 14vh) is the key:
+   *   - 8vw keeps letters large on wide screens
+   *   - 14vh caps them so 4 stacked words (4 × 14vh) = 56vh,
+   *     leaving 44vh for nav (h-20 = 5rem) + subheadline zone.
+   *   - clamp floor prevents tiny text on very small screens
+   */
+  font-size: clamp(36px, min(8vw, 14vh), 150px);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+/* Overflow clip wrapper — hides the entrance yPercent slide-up below the line */
+.hero-word-clip {
+  overflow: hidden;
+  display: block;
+  /* Tiny margin to separate stacked words cleanly */
+  margin-bottom: 0.02em;
+}
+
+/* ── Hero entrance keyframes ──────────────────────────────────────────────── */
+
+/*
+ * Words slide up from below their overflow:hidden clip container.
+ * animation-fill-mode: both ensures opacity:0 is applied BEFORE the delay,
+ * preventing any flash of visible text before the animation starts.
+ */
+@keyframes heroWordReveal {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Subheadline and CTA fade-up */
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navigation entrance — immediate, subtle opacity only.
+ * No slide-down: agency sites never hide nav on load.
+ * 0.3s is enough to avoid a hard cut without making it feel slow. */
+@keyframes navEntrance {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.nav-entrance {
+  animation: navEntrance 0.3s ease both;
+}
+
+/* The animated word element itself.
+ * GSAP scroll effects (xPercent, color) are still applied via JS —
+ * they use inline transforms which stack cleanly on top of the
+ * animation's finished state (transform: translateY(0)). */
+.hero-word {
+  display: block;
+  will-change: transform;
+  opacity: 0; /* overridden by animation-fill-mode: both */
+  animation: heroWordReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* animation-delay is set per-word via inline style in JSX */
+}
+
+/* Subheadline block */
+.hero-subheadline {
+  opacity: 0;
+  animation: heroFadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* animation-delay set via inline style in JSX */
+}
+
+/* Individual CTA buttons */
+.hero-subheadline button {
+  opacity: 0;
+  animation: heroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* \u2500\u2500 Manifesto section \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+
+/* Wrapper creates its own stacking context so z-index is scoped */
+.manifesto-wrapper {
+  isolation: isolate;
+}
+
+/*
+ * Tectonic text layers — part of the normal document flow within the
+ * min-h-screen wrapper. 
+ */
+.manifesto-layer {
+  will-change: transform;
+  pointer-events: none;
+}
+
+/*
+ * Diagonal grid — MUST be position:absolute (not fixed).
+ * position:fixed would bleed over every other section on the page.
+ */
+.manifesto-grid {
+  position: absolute;
+  z-index: 0;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px
+  );
+  background-size: 100px 100%;
+  transform: rotate(30deg);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Typography layers fill the .manifesto-layer height */
+.typography-layer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100%;
+  height: 100%;
+  padding: 6vh 0;
+  font-family: 'Clash Display', sans-serif;
+}
+
+/*
+ * Tectonic text blocks.
+ * Full opacity so it serves as the hero text for the manifesto section.
+ */
+.type-block {
+  font-family: 'Clash Display', sans-serif;
+  font-size: clamp(3.5rem, 8vw, 110px);
+  font-weight: 700;
+  line-height: 1;
+  max-width: 100vw;
+  opacity: 0.9;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.type-block.outline {
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.7);
+  color: transparent;
+  opacity: 1;
+}
+
+.type-block.accent {
+  opacity: 1;
+  color: #ff3b30;
+}
+
+
+/* Process section */
+.reveal-word {
+  font-family: 'Clash Display', sans-serif;
+  font-size: clamp(80px, 18vw, 280px);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  will-change: filter, transform, opacity;
+}
+
+/* Orbital text styles */
+.orbital-char {
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.orbital-char:active {
+  cursor: grabbing;
+}
+
+#lightning-svg path {
+  animation: lightning-flicker 0.1s ease-in-out;
+}
+
+@keyframes lightning-flicker {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* Volumetric typography */
+.volumetric-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  width: 100%;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
+  position: relative;
+}
+
+.volumetric-text {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 8vw;
+  font-weight: 900;
+  color: #222;
+  text-transform: uppercase;
+  letter-spacing: 10px;
+  transform-style: preserve-3d;
+}
+
+.volumetric-text .v-char {
+  display: inline-block;
+  transition: transform 0.1s linear, text-shadow 0.1s linear;
+}
+
+/* Light states for volumetric text */
+.light-state-1 .v-char {
+  text-shadow:
+    1.5px 1px 0px rgba(0,0,0,0.58), 3px 2px 0px rgba(0,0,0,0.56),
+    4.5px 3px 0px rgba(0,0,0,0.54), 6px 4px 0px rgba(0,0,0,0.52),
+    7.5px 5px 0px rgba(0,0,0,0.50), 9px 6px 0px rgba(0,0,0,0.48),
+    12px 8px 0px rgba(0,0,0,0.44), 15px 10px 0px rgba(0,0,0,0.40),
+    18px 12px 0px rgba(0,0,0,0.36), 21px 14px 0px rgba(0,0,0,0.32),
+    24px 16px 0px rgba(0,0,0,0.28), 27px 18px 0px rgba(0,0,0,0.24),
+    30px 20px 0px rgba(0,0,0,0.20), 36px 24px 0px rgba(0,0,0,0.12),
+    42px 28px 0px rgba(0,0,0,0.04), 45px 30px 0px rgba(0,0,0,0.00),
+    0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15),
+    0 0 100px rgba(255,255,255,0.05);
+  color: #ffffff;
+}
+
+.light-state-2 .v-char {
+  text-shadow:
+    1px 1.5px 0px rgba(0,0,0,0.58), 2px 3px 0px rgba(0,0,0,0.56),
+    4px 6px 0px rgba(0,0,0,0.52), 8px 12px 0px rgba(0,0,0,0.44),
+    12px 18px 0px rgba(0,0,0,0.36), 16px 24px 0px rgba(0,0,0,0.28),
+    20px 30px 0px rgba(0,0,0,0.20), 25px 37.5px 0px rgba(0,0,0,0.10),
+    30px 45px 0px rgba(0,0,0,0.00),
+    0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+  color: #ffffff;
+}
+
+.light-state-3 .v-char {
+  text-shadow:
+    -1px 1.5px 0px rgba(0,0,0,0.58), -2px 3px 0px rgba(0,0,0,0.56),
+    -4px 6px 0px rgba(0,0,0,0.52), -8px 12px 0px rgba(0,0,0,0.44),
+    -12px 18px 0px rgba(0,0,0,0.36), -16px 24px 0px rgba(0,0,0,0.28),
+    -20px 30px 0px rgba(0,0,0,0.20), -25px 37.5px 0px rgba(0,0,0,0.10),
+    -30px 45px 0px rgba(0,0,0,0.00),
+    0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+  color: #ffffff;
+}
+
+.light-state-4 .v-char {
+  text-shadow:
+    -1.5px 1px 0px rgba(0,0,0,0.58), -3px 2px 0px rgba(0,0,0,0.56),
+    -6px 4px 0px rgba(0,0,0,0.52), -12px 8px 0px rgba(0,0,0,0.44),
+    -18px 12px 0px rgba(0,0,0,0.36), -24px 16px 0px rgba(0,0,0,0.28),
+    -30px 20px 0px rgba(0,0,0,0.20), -37.5px 25px 0px rgba(0,0,0,0.10),
+    -45px 30px 0px rgba(0,0,0,0.00),
+    0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+  color: #ffffff;
+}
+
+.light-state-5 .v-char {
+  text-shadow:
+    -1.5px -1px 0px rgba(0,0,0,0.58), -3px -2px 0px rgba(0,0,0,0.56),
+    -6px -4px 0px rgba(0,0,0,0.52), -12px -8px 0px rgba(0,0,0,0.44),
+    -18px -12px 0px rgba(0,0,0,0.36), -24px -16px 0px rgba(0,0,0,0.28),
+    -30px -20px 0px rgba(0,0,0,0.20), -37.5px -25px 0px rgba(0,0,0,0.10),
+    -45px -30px 0px rgba(0,0,0,0.00),
+    0 0 20px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+  color: #ffffff;
+}
+
+/* Service icon shapes */
+.service-icon {
+  transition: all 0.3s ease;
+}
+
+.service-icon:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 20px rgba(255, 59, 48, 0.5));
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff3b30;
+  border-radius: 0;
+}
+
+/* Custom cursor dot */
+.cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot.expanded {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 59, 48, 0.3);
+  border: 1px solid #ff3b30;
+}
+
+/* Button hover inversion */
+.btn-cove {
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
+  background: #ff3b30;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-cove:hover {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+.btn-cove-outline {
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
+
+.btn-cove-outline:hover {
+  background: #ffffff;
+  color: #0a0a0a;
+  border-color: #ffffff;
+}
+
+/* Nav link hover */
+.nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #ff3b30;
+  transform: translateX(-101%);
+  transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+  transform: translateX(0);
+}
+
+/* Pricing card */
+.pricing-card {
+  padding: 2rem;
+  border: 1px solid #1a1a1a;
+  background: #0f0f0f;
+  transition: all 0.3s;
+}
+
+.pricing-card:hover {
+  border-color: #ff3b30;
+  transform: translateY(-4px);
+}
+
+.pricing-card.featured {
+  border-color: #ff3b30;
+  background: linear-gradient(180deg, rgba(255, 59, 48, 0.05) 0%, transparent 100%);
+}
+
+/* Process steps */
+.process-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.process-step-number {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-family: 'Clash Display', sans-serif;
+  background: #ff3b30;
+  color: #ffffff;
+}
+
+/* Value card */
+.value-card {
+  padding: 1.5rem;
+  border: 1px solid #1a1a1a;
+  background: #0f0f0f;
+  transition: all 0.3s;
+}
+
+.value-card:hover {
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+/* Testimonial */
+.testimonial-card {
+  padding: 2rem;
+  border: 1px solid #1a1a1a;
+  background: #0f0f0f;
+}
+
+/* CTA section */
+.cta-section {
+  background: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+}
+
+/* Footer */
+.footer-inner {
+  transform-origin: 50% 0%;
+}
