@@ -115,18 +115,17 @@
   .hero-info {
     font-size: clamp(13px, 1.15vw, 22px);
   }
-  /* top, not bottom: the positioning context is the 200vh scroll track (only
-   * the video's own parent is pinned to the viewport), so `bottom` resolves
-   * against that 200vh box, not the visible 100vh fold — it would land the
-   * block far below what's on screen. vh in `top` is viewport-relative
-   * regardless, so this still reads as "86% down the visible viewport". */
+  /* top:50vh + the matching yPercent:-50 GSAP tween (Hero.tsx) centres these
+   * on the word group's own centre — measured at exactly 50vh at every
+   * width — so they read as flanking "We are a / [word] / AGENCY", not
+   * sitting in the empty space below the video. */
   .hero-stats {
     left: 1.5vw;
-    top: 86vh;
+    top: 50vh;
   }
   .hero-statement {
     left: 77.25vw;
-    top: 86vh;
+    top: 50vh;
     width: 20vw;
   }
 }

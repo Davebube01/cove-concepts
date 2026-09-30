@@ -105,6 +105,15 @@ export default function Hero() {
           { xPercent: -50, yPercent: -50 },
           { xPercent: -50, yPercent: -50, duration: 1, delay: 1.5 },
         );
+        // Flank the video/word group at its vertical centre (measured at
+        // exactly 50vh, consistently, since the group is itself centred the
+        // same way) rather than sitting by their own top edge, which left
+        // them well below the video with nothing tying them to it.
+        gsap.fromTo(
+          [statsRef.current, statementRef.current],
+          { yPercent: -50 },
+          { yPercent: -50, duration: 1, delay: 1.5 },
+        );
         gsap.fromTo(
           wrap,
           { opacity: 0, scale: 0.92, xPercent: -50, yPercent: -50 },
