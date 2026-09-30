@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Check, Star, Building2 } from 'lucide-react';
+import { revealEach } from '@/lib/motion';
 
 const plans = [
   {
@@ -57,40 +57,29 @@ export default function Pricing() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
 
+  const scrollToContact = () => {
+    const el = document.querySelector('#contact');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
     if (!cardsRef.current || !sectionRef.current) return;
 
     const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add('(min-width: 768px)', () => {
-        gsap.fromTo(
-          cardsRef.current!.children,
-          { opacity: 0, y: 80 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: cardsRef.current,
-              start: 'top 75%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
-      });
+      // Plan cards + the enterprise strip, each revealed as it reaches the viewport
+      const cards = Array.from(cardsRef.current!.children);
+      const enterprise = sectionRef.current!.querySelector('.enterprise-card');
+      revealEach(enterprise ? [...cards, enterprise] : cards);
     }, sectionRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section id="pricing" ref={sectionRef} className="relative bg-cove-black py-32">
+    <section id="pricing" ref={sectionRef} className="relative bg-cove-black py-20 md:py-32">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10">
         {/* Section Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12 md:mb-20">
           <p className="text-cove-red text-sm uppercase tracking-[0.15em] mb-4 font-inter">
             Pricing
           </p>
@@ -103,7 +92,7 @@ export default function Pricing() {
         </div>
 
         {/* Pricing Cards */}
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-16 max-w-xl lg:max-w-none mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -121,10 +110,10 @@ export default function Pricing() {
               </div>
 
               <div className="mb-8">
-                <span className="font-clash text-4xl md:text-5xl font-semibold text-white">
+                <span className="font-clash text-4xl xl:text-5xl font-semibold text-white">
                   {plan.price}
                 </span>
-                <span className="text-white/40 text-sm ml-1">{plan.period}</span>
+                <span className="text-white/50 text-sm ml-1">{plan.period}</span>
               </div>
 
               <div className="space-y-3 mb-8">
@@ -137,6 +126,7 @@ export default function Pricing() {
               </div>
 
               <button
+                onClick={scrollToContact}
                 className={`w-full py-4 text-sm font-medium uppercase tracking-widest transition-all duration-200 ${
                   plan.featured
                     ? 'bg-cove-red text-white hover:bg-white hover:text-cove-black'
@@ -150,7 +140,7 @@ export default function Pricing() {
         </div>
 
         {/* Custom Enterprise Plan */}
-        <div className="pricing-card flex flex-col md:flex-row items-center justify-between gap-6 p-8 md:p-10">
+        <div className="pricing-card enterprise-card flex flex-col md:flex-row items-center justify-between gap-6 p-8 md:p-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 flex items-center justify-center bg-cove-red/10">
               <Building2 size={24} className="text-cove-red" />
@@ -164,7 +154,7 @@ export default function Pricing() {
               </p>
             </div>
           </div>
-          <button className="btn-cove-outline whitespace-nowrap">
+          <button onClick={scrollToContact} className="btn-cove-outline whitespace-nowrap">
             Contact Us
           </button>
         </div>

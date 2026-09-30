@@ -39,6 +39,7 @@ export default function Services() {
       // If mobile, reset and abort custom scroll logic
       if (window.innerWidth < 768) {
         container.style.height = "auto";
+        ScrollTrigger.refresh();
         return;
       }
 
@@ -57,6 +58,9 @@ export default function Services() {
 
       const totalTravel = lastRow.offsetTop + lastRow.offsetHeight / 2 - center;
       container.style.height = `${window.innerHeight + totalTravel}px`;
+      // This section changes the page height after ScrollTrigger has measured;
+      // without a refresh every trigger below it fires at the wrong scroll position.
+      ScrollTrigger.refresh();
 
       const sectionTop = container.getBoundingClientRect().top + window.scrollY;
       const threshold = firstRow.offsetHeight * 0.8 + ITEM_GAP;
@@ -172,7 +176,7 @@ export default function Services() {
                     <span data-w1 className="flex-1 text-right font-clash font-semibold tracking-tight leading-none text-[#464646] transition-colors duration-100" style={{ fontSize: "clamp(24px, 3vw, 50px)", paddingRight: "clamp(12px, 2vw, 24px)" }}>
                       {w1}
                     </span>
-                    <div data-img className="overflow-hidden flex-shrink-0 rounded-xl" style={{ width: "0px", height: "clamp(40px, 5vw, 64px)", opacity: 0 }}>
+                    <div data-img className="overflow-hidden flex-shrink-0" style={{ width: "0px", height: "clamp(40px, 5vw, 64px)", opacity: 0 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={svc.image} alt={w1} className="w-full h-full object-cover" />
                     </div>
@@ -205,8 +209,8 @@ export default function Services() {
         
         <div className="flex flex-col w-full gap-4">
           {servicesList.map((svc, i) => (
-            <div key={i} className="mobile-animate flex items-center gap-4 w-full bg-white/5 p-4 rounded-xl border border-white/5">
-              <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0">
+            <div key={i} className="mobile-animate flex items-center gap-4 w-full bg-white/5 p-4 border border-white/5">
+              <div className="w-16 h-12 overflow-hidden shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={svc.image} alt={svc.name} className="w-full h-full object-cover" />
               </div>

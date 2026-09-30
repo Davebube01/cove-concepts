@@ -5,6 +5,7 @@
 @theme {
   --font-clash: "Clash Display", sans-serif;
   --font-inter: "Inter", sans-serif;
+  --font-anton: "Anton", "Impact", sans-serif;
 
   --color-cove-black: #0a0a0a;
   --color-cove-charcoal: #141414;
@@ -86,6 +87,61 @@
 .splitting .word {
   display: inline-block;
   white-space: nowrap;
+}
+
+/* Hero (Anton). At line-height 1 Anton's caps sit at 0.065em–0.925em of the
+ * line box, so cap height = 0.86em; desktop tops subtract 0.065em so the
+ * *caps* land on the requested vh. Cap height is 20vh via 23.3vh font-size.
+ * 130px = bottom of the centred nav logo box; the top of the stack never
+ * sits above it on short viewports. */
+.hero-display {
+  font-family: var(--font-anton);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  font-size: 24vw;
+}
+
+.hero-info {
+  font-size: 11px;
+}
+
+@media (min-width: 1024px) {
+  /* Proportions follow the reference: label ≈22vh, word caps 25vh–45vh, video
+   * card ≈53–75vh, AGENCY caps from 80vh. Floors keep the stack clear of the
+   * nav logo box (130px); the third font term only matters on tiny heights,
+   * where cap height must still fit above the card. */
+  .hero-display {
+    font-size: max(40px, min(23.3vh, 17vw, calc((53vh - 186px) / 0.86)));
+  }
+  .hero-word-top {
+    top: max(calc(25vh - 0.065em), 168px);
+  }
+  .hero-word-bottom {
+    top: calc(80vh - 0.065em);
+  }
+  .hero-label {
+    top: max(21vh, 136px);
+    font-size: clamp(14px, 1.25vw, 24px);
+  }
+  .hero-info {
+    font-size: clamp(13px, 1.15vw, 22px);
+  }
+  /* top, not bottom: the positioning context is the 200vh scroll track (only
+   * the video's own parent is pinned to the viewport), so `bottom` resolves
+   * against that 200vh box, not the visible 100vh fold — it would land the
+   * block far below what's on screen. vh in `top` is viewport-relative
+   * regardless, so this still reads as "86% down the visible viewport". */
+  .hero-stats {
+    left: 1.5vw;
+    top: 86vh;
+  }
+  .hero-statement {
+    left: 77.25vw;
+    top: 86vh;
+    width: 20vw;
+  }
 }
 
 /* Hero tectonic text */
@@ -259,7 +315,6 @@
 /* Process section */
 .reveal-word {
   font-family: 'Clash Display', sans-serif;
-  font-size: clamp(80px, 18vw, 280px);
   font-weight: 700;
   text-transform: uppercase;
   line-height: 1;
@@ -482,16 +537,18 @@
 }
 
 /* Pricing card */
+/* Hover lift uses the standalone `translate` property so it never fights
+ * GSAP's `transform` reveal (and never transitions `all`). */
 .pricing-card {
   padding: 2rem;
   border: 1px solid #1a1a1a;
   background: #0f0f0f;
-  transition: all 0.3s;
+  transition: border-color 0.3s, translate 0.3s;
 }
 
 .pricing-card:hover {
   border-color: #ff3b30;
-  transform: translateY(-4px);
+  translate: 0 -4px;
 }
 
 .pricing-card.featured {
@@ -525,7 +582,7 @@
   padding: 1.5rem;
   border: 1px solid #1a1a1a;
   background: #0f0f0f;
-  transition: all 0.3s;
+  transition: border-color 0.3s;
 }
 
 .value-card:hover {

@@ -5,7 +5,6 @@ import Hero from '@/components/sections/Hero';
 import Partners from '@/components/sections/Partners';
 import Manifesto from '@/components/sections/Manifesto';
 import Process from '@/components/sections/Process';
-import Services from '@/components/sections/Services';
 import Accelerator from '@/components/sections/Accelerator';
 import Pricing from '@/components/sections/Pricing';
 import WhyChoose from '@/components/sections/WhyChoose';
@@ -22,7 +21,6 @@ export default function Home() {
       <Hero />
       <Manifesto />
       <WhyChoose />
-      <Services />
       <Process />
       <Testimonials />
       <Accelerator />

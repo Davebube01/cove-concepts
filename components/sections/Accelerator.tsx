@@ -2,39 +2,19 @@
 
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Check, Zap, Calendar, BarChart3, FileText, Video, Share2 } from 'lucide-react';
 import Image from 'next/image';
+import { revealEach } from '@/lib/motion';
 
 export default function Accelerator() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Scroll animations for content
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
     if (!contentRef.current || !sectionRef.current) return;
 
     const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add('(min-width: 768px)', () => {
-        gsap.fromTo(
-          contentRef.current!.children,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: contentRef.current,
-              start: 'top 70%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
-      });
+      revealEach(Array.from(contentRef.current!.children), { stagger: 0.15 });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -56,10 +36,10 @@ export default function Accelerator() {
   ];
 
   return (
-    <section ref={sectionRef} className="relative bg-cove-black py-32 overflow-hidden">
+    <section ref={sectionRef} className="relative bg-cove-black py-20 md:py-32 overflow-hidden">
       {/* Cove Content Engine Section */}
       <div className="max-w-[1400px] mx-auto px-6 md:px-10">
-        <div ref={contentRef} className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div ref={contentRef} className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: Image */}
           <div className="relative">
             <Image

@@ -2,323 +2,265 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/all";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const WORDS = ["CREATIVE", "STRATEGIC", "DYNAMIC"];
+
+const STATS = [
+  { num: "9+", label: "YEARS" },
+  { num: "500+", label: "PROJECTS" },
+  { num: "99%", label: "CLIENT SATISFACTION" },
+];
+
 export default function Hero() {
-  const textRef = useRef<HTMLParagraphElement>(null);
   const outerRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const text1Ref = useRef<HTMLHeadingElement>(null);
-  const text2Ref = useRef<HTMLHeadingElement>(null);
+  const labelRef = useRef<HTMLParagraphElement>(null);
+  const topWordRef = useRef<HTMLDivElement>(null);
+  const bottomWordRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const statementRef = useRef<HTMLDivElement>(null);
+  const wordSpanRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   const [isPlaying, setIsPlaying] = useState(true);
-
-  // Animated words state
-  const words = ["STRATEGIC", "CREATIVE", "DYNAMIC"];
   const [currentWord, setCurrentWord] = useState(0);
+  const [wordWidths, setWordWidths] = useState<number[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentWord((prev) => (prev + 1) % words.length);
+      setCurrentWord((prev) => (prev + 1) % WORDS.length);
     }, 2500);
     return () => clearInterval(interval);
   }, []);
 
+  // Desktop label ("We are a") tracks the left edge of whichever word is showing
   useEffect(() => {
-    if (!outerRef.current || !stickyRef.current) return;
+    const measure = () =>
+      setWordWidths(wordSpanRefs.current.map((el) => el?.offsetWidth ?? 0));
+    measure();
+    document.fonts.ready.then(measure);
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    if (!outer) return;
 
     const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-
-      // ── Desktop Animations (lg and up)
-      mm.add("(min-width: 1024px)", () => {
-        const entTl = gsap.timeline({
+      // Entrance (all breakpoints)
+      gsap.fromTo(
+        [
+          labelRef.current,
+          topWordRef.current,
+          bottomWordRef.current,
+          statsRef.current,
+          statementRef.current,
+        ],
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          ease: "power3.out",
+          stagger: 0.1,
           delay: 1.5,
-          onComplete: () => {
-            // ── Scroll-driven video expansion (Desktop Only)
-            const expandTl = gsap.timeline({
-              scrollTrigger: {
-                trigger: outerRef.current,
-                start: "top top",
-                end: "bottom bottom", // Finishes before the next section scrolls up
-                scrub: 1.2,
-              },
-            });
+        },
+      );
+      gsap.fromTo(
+        videoWrapperRef.current,
+        { opacity: 0, scale: 0.92 },
+        { opacity: 1, scale: 1, duration: 1, ease: "expo.out", delay: 1.6 },
+      );
 
-            // Words slide up and down off screen
-            expandTl.to(
-              text1Ref.current,
-              { y: -300, opacity: 0, ease: "power2.in", duration: 1 },
-              0,
-            );
-            expandTl.to(
-              text2Ref.current,
-              { y: 300, opacity: 0, ease: "power2.in", duration: 1 },
-              0,
-            );
-            expandTl.to(
-              [statsRef.current, statementRef.current],
-              { opacity: 0, duration: 0.4 },
-              0,
-            );
+      // Desktop: the video is pinned (CSS sticky) while it grows from a card to
+      // full-bleed. Words, stats and statement scroll away naturally underneath.
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 1024px)", () => {
+        const layer = layerRef.current;
+        const wrap = videoWrapperRef.current;
+        if (!layer || !wrap) return;
 
-            // Video grows from card to full viewport
-            expandTl.to(
-              videoWrapperRef.current,
-              {
-                width: "100%",
-                height: "100%",
-                yPercent: -50,
-                xPercent: -50,
-                borderRadius: 0,
-                ease: "power2.inOut",
-                duration: 1,
-              },
-              0.05,
-            );
-          },
-        });
+        const startWidth = () =>
+          Math.min(window.innerWidth * 0.186, window.innerHeight * 0.368);
 
-        entTl
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: outer,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 1,
+              invalidateOnRefresh: true,
+            },
+          })
           .fromTo(
-            textRef.current,
-            { y: 100, opacity: 0 },
+            wrap,
             {
+              width: () => startWidth(),
+              height: () => startWidth() * 0.6,
+              // Card rests below centre (≈64vh) like the reference, and
+              // travels back to true centre as it grows to full-bleed.
+              y: () => window.innerHeight * 0.14,
+            },
+            {
+              width: () => layer.clientWidth,
+              height: () => layer.clientHeight,
               y: 0,
-              opacity: 1,
-              duration: 0.8,
-              ease: "power4.out",
-              stagger: 0.12,
+              ease: "none",
             },
-          )
-          .fromTo(
-            [text1Ref.current, text2Ref.current],
-            { y: 50, opacity: 0 },
-            {
-              y: -70,
-              opacity: 1,
-              duration: 1.2,
-              ease: "power4.out",
-              stagger: 0.12,
-            },
-          )
-          .fromTo(
-            videoWrapperRef.current,
-            { scale: 0.85, opacity: 0, xPercent: -50, yPercent: -50 },
-            {
-              scale: 1,
-              opacity: 1,
-              xPercent: -50,
-              yPercent: -80,
-              duration: 1.1,
-              ease: "expo.out",
-            },
-            "-=0.9",
-          )
-          .fromTo(
-            [statsRef.current, statementRef.current],
-            { y: 120, opacity: 0, yPercent: -50 },
-            {
-              y: 160,
-              opacity: 1,
-              yPercent: -50,
-              duration: 0.8,
-              ease: "power2.out",
-              stagger: 0.08,
-            },
-            "-=0.6",
           );
       });
-
-      // ── Mobile Animations (below lg)
-      mm.add("(max-width: 1023px)", () => {
-        const entTl = gsap.timeline({ delay: 1.5 });
-        entTl.fromTo(
-          [
-            textRef.current,
-            text1Ref.current,
-            videoWrapperRef.current,
-            text2Ref.current,
-            statsRef.current,
-            statementRef.current,
-          ],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" },
-        );
-      });
-    }, outerRef);
+    }, outer);
 
     return () => ctx.revert();
   }, []);
 
   const toggleVideo = () => {
-    if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
     if (isPlaying) {
-      videoRef.current.pause();
+      video.pause();
     } else {
-      videoRef.current.play();
+      video.play();
     }
     setIsPlaying(!isPlaying);
   };
 
+  const labelShift = -(wordWidths[currentWord] ?? 0) / 2;
+
   return (
-    <div ref={outerRef} className="lg:min-h-[200vh]">
+    <div
+      ref={outerRef}
+      className="relative flex flex-col min-h-screen px-6 pt-24 pb-12 lg:block lg:min-h-0 lg:h-[200vh] lg:p-0"
+    >
+      {/* Faint crosshair + rings (desktop only) */}
       <div
-        ref={stickyRef}
-        className="relative lg:sticky lg:top-32 z-10 min-h-screen lg:h-screen w-full overflow-hidden bg-[#0a0a0a] flex flex-col lg:block px-6 pt-24 pb-12 lg:p-0"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 hidden h-screen overflow-hidden lg:block"
       >
-        <p
-          ref={textRef}
-          className="text-white lg:text-white/50 text-xs md:text-xs font-semibold tracking-[0.3em] uppercase z-10 mb-2 lg:mb-0 lg:absolute lg:top-[unset] lg:left-[20%] lg:w-[30%]"
+        <div className="absolute inset-x-0 top-[33.5vh] h-px bg-white/[0.06]" />
+        <div className="absolute inset-y-0 left-1/2 w-px bg-white/[0.06]" />
+        <div className="absolute left-1/2 top-[33.5vh] h-[98vh] w-[98vh] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06]" />
+        <div className="absolute left-1/2 top-[33.5vh] h-[90vh] w-[90vh] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06]" />
+      </div>
+
+      <p
+        ref={labelRef}
+        className="hero-label relative z-10 mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-white lg:absolute lg:left-1/2 lg:mb-0 lg:font-normal lg:tracking-normal"
+      >
+        <span
+          className="inline-block lg:translate-x-[var(--label-x)] lg:transition-transform lg:duration-700 lg:ease-[cubic-bezier(0.85,0,0.15,1)]"
+          style={{ "--label-x": `${labelShift}px` } as React.CSSProperties}
         >
           We are <span className="hidden lg:inline">a</span>
-        </p>
+        </span>
+      </p>
 
-        {/* ── TOP WORD: Animated list ── */}
-        <h1
-          ref={text1Ref}
-          className="relative lg:absolute z-10 text-white select-none uppercase m-0 p-0 leading-none text-left lg:text-center w-full flex justify-start lg:justify-center mb-6 lg:mb-0 lg:top-[12%] lg:left-0 whitespace-nowrap"
-          style={{
-            fontFamily: "'Clash Display', sans-serif",
-            fontWeight: 600,
-            fontSize: "clamp(50px, 15vw, 200px)",
-            letterSpacing: "-0.03em",
-          }}
-        >
-          <div className="relative h-[1em] overflow-hidden w-full text-left lg:text-center">
-            {words.map((word, index) => (
-              <div
-                key={word}
-                className="absolute top-0 left-0 w-full text-left lg:text-center transition-all duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
-                style={{
-                  transform: `translateY(${(index - currentWord) * 100}%)`,
-                  opacity:
-                    Math.abs(index - currentWord) > 1
-                      ? 0
-                      : index === currentWord
-                        ? 1
-                        : 0,
+      {/* Rotating word (decorative — the real heading is the AGENCY h1) */}
+      <div
+        ref={topWordRef}
+        aria-hidden="true"
+        className="hero-display hero-word-top relative z-10 mb-6 select-none whitespace-nowrap text-left text-white lg:absolute lg:inset-x-0 lg:mb-0 lg:text-center"
+      >
+        <div className="relative h-[1em] overflow-hidden">
+          {WORDS.map((word, index) => (
+            <div
+              key={word}
+              className="absolute inset-x-0 top-0 transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
+              style={{
+                transform: `translateY(${(index - currentWord) * 100}%)`,
+                opacity: index === currentWord ? 1 : 0,
+              }}
+            >
+              <span
+                ref={(el) => {
+                  wordSpanRefs.current[index] = el;
                 }}
+                className="inline-block"
               >
                 {word}
-              </div>
-            ))}
-          </div>
-        </h1>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* ── VIDEO ── */}
+      {/* Video: sticky on desktop, grows to full-bleed on scroll */}
+      <div
+        ref={layerRef}
+        className="relative z-20 mb-4 lg:sticky lg:top-0 lg:mb-0 lg:flex lg:h-screen lg:items-center lg:justify-center lg:pointer-events-none"
+      >
         <div
           ref={videoWrapperRef}
-          className="relative lg:absolute z-20 overflow-hidden bg-black cursor-pointer group mb-4 lg:mb-0 lg:top-1/2 lg:left-1/2 w-full lg:w-[clamp(350px,50vw,300px)] aspect-[16/10] rounded lg:rounded-[4px]"
-          style={{
-            boxShadow: "0 30px 80px rgba(0,0,0,0.8)",
-          }}
           onClick={toggleVideo}
+          className="group relative aspect-[16/10] w-full cursor-pointer overflow-hidden bg-black lg:pointer-events-auto lg:aspect-[5/3] lg:w-[min(18.6vw,36.8vh)]"
         >
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             autoPlay
             loop
             muted
             playsInline
-            src="/videos/hero-bg.mp4"
+            src="/videos/hero-intro.mp4"
           />
-          <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 w-10 h-10 md:w-12 md:h-12 bg-black/50 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+          <div className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/55 backdrop-blur-md transition-transform duration-300 group-hover:scale-110 lg:bottom-5 lg:right-5 lg:h-14 lg:w-14">
             {isPlaying ? (
-              <svg
-                className="w-4 h-4 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
               </svg>
             ) : (
-              <svg
-                className="w-4 h-4 text-white ml-0.5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="ml-0.5 h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
           </div>
         </div>
+      </div>
 
-        {/* ── BOTTOM WORD: AGENCY ── */}
-        <div
-          className="flex flex-col items-end w-full mb-12 lg:mb-0 lg:absolute lg:bottom-[8%] lg:left-0 z-10"
-          ref={text2Ref}
+      <div
+        ref={bottomWordRef}
+        className="hero-display hero-word-bottom relative z-10 mb-12 flex w-full flex-col items-end text-white lg:absolute lg:inset-x-0 lg:mb-0 lg:items-center"
+      >
+        <h1
+          aria-label="We are a Strategic, Creative, Dynamic Agency"
+          className="m-0 w-full select-none whitespace-nowrap p-0 text-right lg:text-center"
         >
-          <h1
-            className="text-white select-none uppercase m-0 p-0 leading-none text-right lg:text-center w-full"
-            style={{
-              fontFamily: "'Clash Display', sans-serif",
-              fontWeight: 600,
-              fontSize: "clamp(50px, 15vw, 200px)",
-              letterSpacing: "-0.03em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            AGENCY
-          </h1>
-          {/* <span className="lg:hidden text-white font-medium tracking-[0.2em] text-sm mt-1">
-            EVER
-          </span> */}
-        </div>
+          <span aria-hidden="true">AGENCY</span>
+        </h1>
+      </div>
 
-        {/* ── Left side Stats ── */}
-        <div
-          ref={statsRef}
-          className="relative lg:absolute z-30 flex flex-col gap-3 md:gap-3 mb-10 lg:mb-0 lg:top-1/2 lg:left-[clamp(20px,4vw,20px)] w-full lg:w-auto"
-        >
-          {[
-            { num: "9+", label: "YEARS" },
-            { num: "500+", label: "PROJECTS" },
-            { num: "99%", label: "CLIENT SATISFACTION" },
-          ].map(({ num, label }) => (
-            <div
-              key={label}
-              className="flex flex-row lg:flex-col items-center lg:items-start gap-4 lg:gap-0"
-            >
-              <span className="text-white text-lg lg:text-xl font-bold leading-none w-14 lg:w-auto text-left">
-                {num}
-              </span>
-              <span className="text-white/80 lg:text-white/50 text-[10px] lg:text-[11px] tracking-[0.15em] uppercase">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Right side Statement ── */}
-        <div
-          ref={statementRef}
-          className="relative lg:absolute z-30 w-full lg:max-w-[280px] lg:top-1/2 lg:right-[clamp(20px,4vw,20px)] lg:text-right"
-        >
-          <p className="text-[11px] lg:text-xs font-medium tracking-[0.15em] leading-relaxed text-white/80 lg:text-white/60 uppercase text-left lg:text-right">
-            <strong className="text-white not-italic block mb-2 font-bold">
-              <span className="lg:hidden">
-                WE DON'T BELIEVE IN ONE-SIZE-FITS-ALL SOLUTIONS.
-              </span>
-              <span className="hidden lg:inline">
-                EVERY BRAND HAS ITS OWN STORY
-              </span>
-            </strong>
-            <span className="lg:hidden">
-              EVERY BRAND HAS ITS OWN STORY. OUR JOB IS TO ALIGN STRATEGY.
+      <div
+        ref={statsRef}
+        className="hero-info hero-stats relative z-10 mb-10 flex w-full flex-col gap-3 lg:absolute lg:mb-0 lg:w-auto lg:gap-[0.75em]"
+      >
+        {STATS.map(({ num, label }) => (
+          <div key={label} className="flex items-center gap-4 lg:gap-0">
+            <span className="w-14 text-lg font-bold leading-none text-white lg:w-[3.4em] lg:text-[1em]">
+              {num}
             </span>
-            <span className="hidden lg:inline">
-              We Build, Manage, and Grow Brands That Command Attention
+            <span className="text-[10px] uppercase tracking-[0.15em] text-white/80 lg:text-[1em] lg:tracking-normal lg:text-white/70">
+              {label}
             </span>
-          </p>
-        </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        ref={statementRef}
+        className="hero-info hero-statement relative z-10 w-full lg:absolute"
+      >
+        <p className="text-left text-[11px] font-medium uppercase leading-relaxed tracking-[0.15em] text-white/70 lg:text-[1em] lg:leading-[1.5] lg:tracking-normal">
+          <strong className="font-medium text-white">
+            WE DON&apos;T BELIEVE IN ONE-SIZE-FITS-ALL SOLUTIONS.
+          </strong>{" "}
+          EVERY BRAND HAS ITS OWN STORY. OUR JOB IS TO ALIGN STRATEGY.
+        </p>
       </div>
     </div>
   );

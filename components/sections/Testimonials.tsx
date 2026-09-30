@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { prefersReducedMotion, revealIn } from "@/lib/motion";
 
 // Keep exactly as user had it
 const testimonials = [
@@ -38,79 +38,66 @@ export default function Testimonials() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isAnimating = useRef(false);
+  const touchStartX = useRef(0);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-    if (!containerRef.current || !sectionRef.current) return;
+    const section = sectionRef.current;
+    if (!section) return;
 
     const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add("(min-width: 768px)", () => {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 75%",
-            toggleActions: "play none none reverse",
-          }
-        });
-
-        tl.fromTo(
-          ".testimonial-header",
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
-        )
-        .fromTo(
-          ".testimonial-img",
-          { opacity: 0, x: -50, scale: 0.9 },
-          { opacity: 1, x: 0, scale: 1, duration: 0.8, ease: "power3.out" },
-          "-=0.4"
-        )
-        .fromTo(
-          ".testimonial-content",
-          { opacity: 0, x: 50 },
-          { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" },
-          "-=0.6"
-        );
-      });
-    }, sectionRef);
+      revealIn(section.querySelector(".testimonial-header"));
+      revealIn(section.querySelector(".testimonial-img"), { from: { x: -50 } });
+      revealIn(section.querySelector(".testimonial-content"), { from: { x: 50 }, delay: 0.12 });
+    }, section);
 
     return () => ctx.revert();
   }, []);
 
-  const nextTestimonial = () => {
-    if (!containerRef.current) return;
-    
-    gsap.to(containerRef.current, {
+  // dir: 1 = forward (content exits left), -1 = back (exits right)
+  const goTo = (index: number, dir: 1 | -1) => {
+    const el = containerRef.current;
+    if (!el || isAnimating.current || index === currentIndex) return;
+
+    if (prefersReducedMotion()) {
+      setCurrentIndex(index);
+      return;
+    }
+
+    isAnimating.current = true;
+    gsap.to(el, {
       opacity: 0,
-      x: -20,
+      x: -20 * dir,
       duration: 0.3,
+      ease: "power2.in",
       onComplete: () => {
-        setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+        setCurrentIndex(index);
         gsap.fromTo(
-          containerRef.current,
-          { opacity: 0, x: 20 },
-          { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }
+          el,
+          { opacity: 0, x: 20 * dir },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.4,
+            ease: "power2.out",
+            onComplete: () => {
+              isAnimating.current = false;
+            },
+          },
         );
-      }
+      },
     });
   };
 
-  const prevTestimonial = () => {
-    if (!containerRef.current) return;
-    
-    gsap.to(containerRef.current, {
-      opacity: 0,
-      x: 20,
-      duration: 0.3,
-      onComplete: () => {
-        setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-        gsap.fromTo(
-          containerRef.current,
-          { opacity: 0, x: -20 },
-          { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }
-        );
-      }
-    });
+  const nextTestimonial = () => goTo((currentIndex + 1) % testimonials.length, 1);
+  const prevTestimonial = () =>
+    goTo((currentIndex - 1 + testimonials.length) % testimonials.length, -1);
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) nextTestimonial();
+    else prevTestimonial();
   };
 
   const current = testimonials[currentIndex];
@@ -119,11 +106,11 @@ export default function Testimonials() {
   const companyName = roleParts.length > 1 ? roleParts[1].trim() : "monosen";
 
   return (
-    <section ref={sectionRef} className="relative bg-[#0a0a0a] py-32 overflow-hidden">
+    <section ref={sectionRef} className="relative bg-[#0a0a0a] py-20 md:py-32 overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
 
          {/* Section Header */}
-        <div className="text-center mb-20 testimonial-header">
+        <div className="text-center mb-12 md:mb-20 testimonial-header">
           <p className="text-cove-red text-sm uppercase tracking-[0.15em] mb-4 font-inter">
             Testimonials
           </p>
@@ -132,7 +119,14 @@ export default function Testimonials() {
           </h2>
         </div>
         
-        <div ref={containerRef} className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+        <div
+          ref={containerRef}
+          onTouchStart={(e) => {
+            touchStartX.current = e.touches[0].clientX;
+          }}
+          onTouchEnd={handleTouchEnd}
+          className="flex flex-col md:flex-row items-center gap-12 md:gap-24 touch-pan-y"
+        >
           
           {/* ── LEFT: Image & Circular Outlines ── */}
           <div className="relative w-full max-w-[320px] md:max-w-[400px] shrink-0 testimonial-img">
@@ -180,14 +174,14 @@ export default function Testimonials() {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={prevTestimonial}
-                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 hover:border-white/30 transition-all"
+                  className="w-11 h-11 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 hover:border-white/30 transition-all"
                   aria-label="Previous Testimonial"
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button 
                   onClick={nextTestimonial}
-                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 hover:border-white/30 transition-all"
+                  className="w-11 h-11 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 hover:border-white/30 transition-all"
                   aria-label="Next Testimonial"
                 >
                   <ChevronRight size={18} />
@@ -197,6 +191,25 @@ export default function Testimonials() {
 
           </div>
 
+        </div>
+
+        {/* Mobile position dots (swipe or tap) */}
+        <div className="mt-10 flex justify-center md:hidden">
+          {testimonials.map((t, i) => (
+            <button
+              key={t.author}
+              onClick={() => goTo(i, i > currentIndex ? 1 : -1)}
+              aria-label={`Show testimonial ${i + 1} of ${testimonials.length}`}
+              aria-current={i === currentIndex}
+              className="p-3"
+            >
+              <span
+                className={`block h-2 w-2 rounded-full transition-colors duration-300 ${
+                  i === currentIndex ? "bg-cove-red" : "bg-white/25"
+                }`}
+              />
+            </button>
+          ))}
         </div>
       </div>
     </section>

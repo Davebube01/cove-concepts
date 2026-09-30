@@ -2,33 +2,18 @@
 
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight } from 'lucide-react';
+import { revealIn } from '@/lib/motion';
 
 export default function FinalCTA() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
     if (!contentRef.current || !sectionRef.current) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        contentRef.current,
-        { opacity: 0, y: 80 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 70%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
+      revealIn(contentRef.current, { start: 'top 80%' });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -40,7 +25,7 @@ export default function FinalCTA() {
   };
 
   return (
-    <section ref={sectionRef} className="cta-section relative py-40 overflow-hidden">
+    <section ref={sectionRef} className="cta-section relative py-24 md:py-40 overflow-hidden">
       {/* Background Glow */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
