@@ -116,21 +116,28 @@ export default function WhyChoose() {
           </h2>
         </div>
 
-        {/* Glass panels */}
-        <div
-          ref={glassRef}
-          className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-16 md:mb-20"
-        >
-          {glassWords.map((word) => (
-            <div
-              key={word}
-              className="px-6 py-4 md:px-8 md:py-5 bg-white/[0.06] backdrop-blur-md border border-white/15 hover:border-cove-red/40 hover:bg-white/[0.1] transition-colors duration-300"
-            >
-              <span className="font-clash text-xl md:text-3xl font-semibold text-white whitespace-nowrap">
-                {word}
-              </span>
-            </div>
-          ))}
+        {/* Glass panels — the blurred color blobs behind give backdrop-blur
+            something to actually refract; without them, on a flat black
+            section, "glass" panels look like plain outlined boxes. */}
+        <div className="relative mb-16 md:mb-20">
+          <div className="pointer-events-none absolute -top-10 left-[8%] h-56 w-56 rounded-full bg-cove-red/30 blur-[90px]" />
+          <div className="pointer-events-none absolute -bottom-16 right-[10%] h-64 w-64 rounded-full bg-white/10 blur-[100px]" />
+
+          <div
+            ref={glassRef}
+            className="relative flex flex-wrap items-center justify-center gap-4 md:gap-6"
+          >
+            {glassWords.map((word) => (
+              <div
+                key={word}
+                className="rounded-2xl border border-white/15 bg-white/[0.07] px-6 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-inset ring-white/10 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cove-red/40 hover:bg-white/[0.12] md:px-8 md:py-5"
+              >
+                <span className="font-clash text-xl md:text-3xl font-semibold text-white whitespace-nowrap">
+                  {word}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Reasons Grid */}
