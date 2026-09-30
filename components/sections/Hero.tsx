@@ -19,6 +19,7 @@ const STATS = [
 
 export default function Hero() {
   const outerRef = useRef<HTMLDivElement>(null);
+  const pinTrackRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLParagraphElement>(null);
   const wordGroupRef = useRef<HTMLDivElement>(null);
@@ -55,19 +56,22 @@ export default function Hero() {
       });
       return () => trigger.kill();
     });
-    // Mobile doesn't pin, so the video (with the words on it) is only on
-    // screen for the distance it takes to scroll past its own card — not
-    // the whole hero section, which is much taller (stats/statement sit
-    // below it). End the range there so all 3 words are seen before the
-    // video scrolls out of view.
+    // Mobile pins the video card (via pinTrackRef, a tall track that's
+    // sticky-child + track just like desktop's) so it stays on screen for
+    // the whole word-swap instead of scrolling past in an instant. The end
+    // point is where native CSS sticky naturally un-pins — track's own
+    // bottom minus the sticky element's height — so the words finish
+    // swapping right as the card scrolls away, not before or after.
     mm.add("(max-width: 1023px)", () => {
       const trigger = ScrollTrigger.create({
-        trigger: outerRef.current,
+        trigger: pinTrackRef.current,
         start: "top top",
         end: () => {
-          const video = videoWrapperRef.current;
-          if (!video) return "bottom top";
-          return video.getBoundingClientRect().bottom + window.scrollY;
+          const track = pinTrackRef.current;
+          const layer = layerRef.current;
+          if (!track || !layer) return "bottom top";
+          const trackTop = track.getBoundingClientRect().top + window.scrollY;
+          return trackTop + track.offsetHeight - layer.offsetHeight;
         },
         onUpdate,
       });
@@ -196,89 +200,91 @@ export default function Hero() {
         GSAP xPercent/yPercent), which is what keeps them coincident while
         the video grows — the words stay "on" the video at every size.
       */}
-      <div
-        ref={layerRef}
-        className="relative z-20 mb-4 lg:sticky lg:top-0 lg:mb-0 lg:flex lg:h-screen lg:items-center lg:justify-center"
-      >
-        <div className="relative w-full max-w-[460px] mx-auto lg:contents">
-          {/* ── VIDEO ── */}
-          <div
-            ref={videoWrapperRef}
-            onClick={toggleVideo}
-            className="group relative lg:absolute z-10 lg:top-1/2 lg:left-1/2 aspect-[16/10] w-full lg:w-[min(29vw,58vh,560px)] cursor-pointer overflow-hidden bg-black rounded lg:rounded-[4px]"
-            style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.8)" }}
-          >
-            <video
-              ref={videoRef}
-              className="h-full w-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-              src="/videos/hero-intro.mp4"
-            />
-            <div className="absolute inset-0 bg-black/35 pointer-events-none" />
-            <div className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/55 backdrop-blur-md transition-transform duration-300 group-hover:scale-110 lg:bottom-5 lg:right-5 lg:h-14 lg:w-14">
-              {isPlaying ? (
-                <svg className="h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                </svg>
-              ) : (
-                <svg className="ml-0.5 h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </div>
-          </div>
-
-          {/* ── "We are a" / [WORD] / "AGENCY" — static, overlaid on the video ── */}
-          <div
-            ref={wordGroupRef}
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 text-center pointer-events-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:gap-2"
-          >
-            <p
-              ref={labelRef}
-              className="text-white text-xs font-semibold tracking-[0.3em] uppercase"
-              style={{ textShadow: "0 2px 20px rgba(0,0,0,0.85)" }}
-            >
-              We are a
-            </p>
-
-            {/* Rotating word — decorative; the real heading is the AGENCY h1 below */}
+      <div ref={pinTrackRef} className="relative h-[240vh] lg:contents">
+        <div
+          ref={layerRef}
+          className="sticky top-0 z-20 flex items-center justify-center lg:mb-0 lg:h-screen"
+        >
+          <div className="relative w-full max-w-[460px] mx-auto lg:contents">
+            {/* ── VIDEO ── */}
             <div
-              ref={topWordRef}
-              aria-hidden="true"
-              className="hero-overlay-text text-white select-none whitespace-nowrap text-center"
-              style={{ textShadow: "0 4px 30px rgba(0,0,0,0.9)" }}
+              ref={videoWrapperRef}
+              onClick={toggleVideo}
+              className="group relative lg:absolute z-10 lg:top-1/2 lg:left-1/2 aspect-[16/10] w-full lg:w-[min(29vw,58vh,560px)] cursor-pointer overflow-hidden bg-black rounded lg:rounded-[4px]"
+              style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.8)" }}
             >
-              <div className="relative h-[1.1em] overflow-hidden">
-                {/* Invisible, in normal flow: reserves width for the widest
-                    word so the swiping rows below (all absolutely
-                    positioned) don't collapse this box to zero width. */}
-                <span className="invisible">{widestWord}</span>
-                {WORDS.map((word, index) => (
-                  <div
-                    key={word}
-                    className="absolute inset-x-0 top-0 transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
-                    style={{
-                      transform: `translateY(${(index - currentWord) * 100}%)`,
-                      opacity: index === currentWord ? 1 : 0,
-                    }}
-                  >
-                    {word}
-                  </div>
-                ))}
+              <video
+                ref={videoRef}
+                className="h-full w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                src="/videos/hero-intro.mp4"
+              />
+              <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+              <div className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/55 backdrop-blur-md transition-transform duration-300 group-hover:scale-110 lg:bottom-5 lg:right-5 lg:h-14 lg:w-14">
+                {isPlaying ? (
+                  <svg className="h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-0.5 h-4 w-4 text-white lg:h-5 lg:w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
               </div>
             </div>
 
-            <h1
-              ref={bottomWordRef}
-              aria-label={`We are a ${WORDS.join(", ")} Agency`}
-              className="hero-overlay-text m-0 p-0 text-white select-none whitespace-nowrap"
-              style={{ textShadow: "0 4px 30px rgba(0,0,0,0.9)" }}
+            {/* ── "We are a" / [WORD] / "AGENCY" — static, overlaid on the video ── */}
+            <div
+              ref={wordGroupRef}
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 text-center pointer-events-none lg:inset-auto lg:top-1/2 lg:left-1/2 lg:gap-2"
             >
-              <span aria-hidden="true">AGENCY</span>
-            </h1>
+              <p
+                ref={labelRef}
+                className="text-white text-xs font-semibold tracking-[0.3em] uppercase"
+                style={{ textShadow: "0 2px 20px rgba(0,0,0,0.85)" }}
+              >
+                We are a
+              </p>
+
+              {/* Rotating word — decorative; the real heading is the AGENCY h1 below */}
+              <div
+                ref={topWordRef}
+                aria-hidden="true"
+                className="hero-overlay-text text-white select-none whitespace-nowrap text-center"
+                style={{ textShadow: "0 4px 30px rgba(0,0,0,0.9)" }}
+              >
+                <div className="relative h-[1.1em] overflow-hidden">
+                  {/* Invisible, in normal flow: reserves width for the widest
+                      word so the swiping rows below (all absolutely
+                      positioned) don't collapse this box to zero width. */}
+                  <span className="invisible">{widestWord}</span>
+                  {WORDS.map((word, index) => (
+                    <div
+                      key={word}
+                      className="absolute inset-x-0 top-0 transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.85,0,0.15,1)]"
+                      style={{
+                        transform: `translateY(${(index - currentWord) * 100}%)`,
+                        opacity: index === currentWord ? 1 : 0,
+                      }}
+                    >
+                      {word}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <h1
+                ref={bottomWordRef}
+                aria-label={`We are a ${WORDS.join(", ")} Agency`}
+                className="hero-overlay-text m-0 p-0 text-white select-none whitespace-nowrap"
+                style={{ textShadow: "0 4px 30px rgba(0,0,0,0.9)" }}
+              >
+                <span aria-hidden="true">AGENCY</span>
+              </h1>
+            </div>
           </div>
         </div>
       </div>
