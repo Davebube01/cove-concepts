@@ -132,14 +132,17 @@
    * the video's own parent is pinned to the viewport), so `bottom` resolves
    * against that 200vh box, not the visible 100vh fold — it would land the
    * block far below what's on screen. vh in `top` is viewport-relative
-   * regardless, so this still reads as "86% down the visible viewport". */
+   * regardless, so this still reads as "on the same line as AGENCY".
+   * 83vh, not AGENCY's own 80vh cap-top: these blocks are shorter than
+   * AGENCY's cap height, so their top has to sit lower for their *centre*
+   * to land level with AGENCY's centre (verified at 90vh across sizes). */
   .hero-stats {
     left: 1.5vw;
-    top: 86vh;
+    top: 83vh;
   }
   .hero-statement {
     left: 77.25vw;
-    top: 86vh;
+    top: 83vh;
     width: 20vw;
   }
 }
