@@ -138,7 +138,7 @@ export default function Manifesto() {
       </div>
 
       {/* Partners / Stats Content */}
-      {/* <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 pb-20 md:pb-48 pt-8 md:pt-20">
+      <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 pb-20 md:pb-48 pt-8 md:pt-20">
         <div className="w-full h-[1px] bg-white/10 mb-12 md:mb-32" />
 
         <div ref={partnersRef} className="w-full">
@@ -186,7 +186,7 @@ export default function Manifesto() {
             ))}
           </div>
         </div>
-      </div> */}
+      </div>
     </section>
   );
 }
