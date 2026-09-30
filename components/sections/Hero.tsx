@@ -174,7 +174,7 @@ export default function Hero() {
   return (
     <div
       ref={outerRef}
-      className="relative flex flex-col min-h-screen px-6 pt-24 pb-12 lg:block lg:min-h-0 lg:h-[200vh] lg:p-0"
+      className="relative flex flex-col min-h-screen px-6 pt-24 pb-12 lg:block lg:min-h-0 lg:h-[320vh] lg:p-0"
     >
       {/* Faint crosshair + rings (desktop only) */}
       <div
