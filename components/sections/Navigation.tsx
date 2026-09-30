@@ -22,9 +22,9 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed md:absolute top-0 left-0 z-50 w-full bg-[#0a0a0a] md:bg-transparent nav-entrance transition-all duration-300 border-b border-white/10 md:border-transparent">
+      <nav className="fixed lg:absolute top-0 left-0 z-50 w-full bg-[#0a0a0a] lg:bg-transparent nav-entrance transition-all duration-300 border-b border-white/10 lg:border-transparent">
         {/* Desktop: 3-column grid */}
-        <div className="hidden md:grid grid-cols-3 items-start px-10 pt-8 pb-0">
+        <div className="hidden lg:grid grid-cols-3 items-start px-10 pt-8 pb-0">
           {/* Left: nav links stacked vertically */}
           <div className="flex flex-col gap-[15px]">
             {navLinks.map((link) => (
@@ -73,7 +73,7 @@ export default function Navigation() {
         </div>
 
         {/* Mobile: logo + hamburger */}
-        <div className="md:hidden flex items-center justify-between px-6 py-5">
+        <div className="lg:hidden flex items-center justify-between px-6 py-5">
           <a
             href="#"
             className="font-clash text-xl font-semibold tracking-tight text-white"
@@ -100,7 +100,7 @@ export default function Navigation() {
 
       {/* Mobile menu overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-cove-black flex flex-col items-center justify-center gap-8 md:hidden">
+        <div className="fixed inset-0 z-40 bg-cove-black flex flex-col items-center justify-center gap-8 lg:hidden">
           {navLinks.map((link) => (
             <button
               key={link.label}
