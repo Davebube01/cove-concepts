@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   images: {
-    unoptimized: false,
+    unoptimized: true,
   },
   typescript: {
     // chart.tsx (recharts v2 API) and calendar.tsx (react-day-picker v9 API)
